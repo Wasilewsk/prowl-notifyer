@@ -38,6 +38,7 @@ class AppSettings:
     ports_cooldown_seconds: int
     start_in_tray: bool
     start_monitoring_on_launch: bool
+    auto_check_updates: bool
 
 
 DEFAULTS = AppSettings(
@@ -62,6 +63,7 @@ DEFAULTS = AppSettings(
     ports_cooldown_seconds=60,
     start_in_tray=True,
     start_monitoring_on_launch=True,
+    auto_check_updates=True,
 )
 
 
@@ -146,6 +148,7 @@ def load_settings() -> AppSettings:
         start_monitoring_on_launch=bool(
             ui.get("start_monitoring_on_launch", DEFAULTS.start_monitoring_on_launch)
         ),
+        auto_check_updates=bool(ui.get("auto_check_updates", DEFAULTS.auto_check_updates)),
     )
 
 
@@ -194,6 +197,7 @@ def save_settings(settings: AppSettings) -> None:
     lines.append(
         f"start_monitoring_on_launch = {str(settings.start_monitoring_on_launch).lower()}"
     )
+    lines.append(f"auto_check_updates = {str(settings.auto_check_updates).lower()}")
 
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

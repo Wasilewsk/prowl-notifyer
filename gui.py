@@ -10,6 +10,7 @@ import wx.adv
 from config_io import AppSettings, DEFAULTS, load_settings, save_settings
 from prowl_client import ProwlClient, ProwlConfig
 from service import MonitorService
+from updater import current_version, download_exe, fetch_latest, is_newer, open_release_page
 
 
 class ServiceRunner:
@@ -217,6 +218,10 @@ class SettingsDialog(wx.Dialog):
         self.start_monitoring_check.SetValue(self.settings.start_monitoring_on_launch)
         sizer.Add(self.start_monitoring_check, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
 
+        self.auto_update_check = wx.CheckBox(panel, label="&Check for updates on launch")
+        self.auto_update_check.SetValue(self.settings.auto_check_updates)
+        sizer.Add(self.auto_update_check, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
         panel.SetSizer(sizer)
         return panel
 
@@ -267,6 +272,7 @@ class SettingsDialog(wx.Dialog):
             ports_cooldown_seconds=int(self.ports_cooldown_ctrl.GetValue()),
             start_in_tray=self.start_in_tray_check.GetValue(),
             start_monitoring_on_launch=self.start_monitoring_check.GetValue(),
+            auto_check_updates=self.auto_update_check.GetValue(),
         )
 
 
@@ -282,6 +288,7 @@ class TrayIcon(wx.adv.TaskBarIcon):
         menu = wx.Menu()
         open_item = menu.Append(wx.ID_ANY, "Open")
         settings_item = menu.Append(wx.ID_ANY, "Settings")
+        update_item = menu.Append(wx.ID_ANY, "Check for Updates")
         if self.frame.runner.is_running():
             toggle_item = menu.Append(wx.ID_ANY, "Stop Monitoring")
         else:
@@ -291,6 +298,7 @@ class TrayIcon(wx.adv.TaskBarIcon):
 
         self.Bind(wx.EVT_MENU, self.on_open, open_item)
         self.Bind(wx.EVT_MENU, self.on_settings, settings_item)
+        self.Bind(wx.EVT_MENU, self.on_updates, update_item)
         self.Bind(wx.EVT_MENU, self.on_toggle, toggle_item)
         self.Bind(wx.EVT_MENU, self.on_exit, exit_item)
         return menu
@@ -303,6 +311,9 @@ class TrayIcon(wx.adv.TaskBarIcon):
 
     def on_toggle(self, _event: wx.Event) -> None:
         self.frame.toggle_monitoring()
+
+    def on_updates(self, _event: wx.Event) -> None:
+        self.frame.check_for_updates()
 
     def on_exit(self, _event: wx.Event) -> None:
         self.frame.force_exit()
@@ -335,6 +346,10 @@ class MainFrame(wx.Frame):
         settings_btn.Bind(wx.EVT_BUTTON, self.on_settings)
         btn_sizer.Add(settings_btn, 0, wx.RIGHT, 8)
 
+        update_btn = wx.Button(panel, label="Check for &Updates")
+        update_btn.Bind(wx.EVT_BUTTON, self.on_updates)
+        btn_sizer.Add(update_btn, 0, wx.RIGHT, 8)
+
         hide_btn = wx.Button(panel, label="&Hide to Tray")
         hide_btn.Bind(wx.EVT_BUTTON, self.on_hide)
         btn_sizer.Add(hide_btn, 0, wx.RIGHT, 8)
@@ -354,6 +369,9 @@ class MainFrame(wx.Frame):
 
         if self.settings.start_in_tray:
             self.Hide()
+
+        if self.settings.auto_check_updates:
+            threading.Thread(target=self.check_for_updates, daemon=True).start()
 
     def update_status(self) -> None:
         if self.runner.is_running():
@@ -376,6 +394,9 @@ class MainFrame(wx.Frame):
 
     def on_settings(self, _event: wx.Event) -> None:
         self.open_settings()
+
+    def on_updates(self, _event: wx.Event) -> None:
+        self.check_for_updates()
 
     def open_settings(self) -> None:
         dialog = SettingsDialog(self, self.settings)
@@ -412,6 +433,46 @@ class MainFrame(wx.Frame):
     def force_exit(self) -> None:
         self.force_quit = True
         self.Close()
+
+    def check_for_updates(self) -> None:
+        try:
+            latest = fetch_latest()
+        except Exception:
+            wx.CallAfter(
+                wx.MessageBox,
+                "Could not check for updates right now.",
+                "Update Check",
+            )
+            return
+
+        latest_version = latest.version or "unknown"
+        if latest.version and is_newer(latest.version, current_version()):
+            message = (
+                f"A newer version is available ({latest_version}).\\n\\n"
+                "Do you want to download the EXE to your Downloads folder?"
+            )
+            res = wx.MessageBox(message, "Update Available", wx.YES_NO | wx.ICON_QUESTION)
+            if res == wx.YES and latest.download_url:
+                try:
+                    path = download_exe(latest.download_url)
+                    wx.MessageBox(
+                        f"Downloaded to:\\n{path}\\n\\n"
+                        "Close the app and replace the old EXE manually.",
+                        "Download Complete",
+                    )
+                except Exception:
+                    wx.MessageBox(
+                        "Download failed. Opening the releases page instead.",
+                        "Update Error",
+                    )
+                    open_release_page()
+            else:
+                open_release_page()
+        else:
+            wx.MessageBox(
+                f"You are up to date (v{current_version()}).",
+                "No Updates",
+            )
 
 
 class WelcomePage(wx.adv.WizardPageSimple):

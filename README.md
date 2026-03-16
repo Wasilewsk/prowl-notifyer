@@ -54,3 +54,8 @@ pyinstaller --onefile --noconsole --name ProwlNotifier main.py
 - [psutil](https://psutil.readthedocs.io/)
 - [Requests](https://requests.readthedocs.io/)
 - [Prowl API](https://www.prowlapp.com/api.php)
+
+## Updates
+
+- The app can check GitHub for new releases.
+- Downloads are saved to your `Downloads` folder and must be replaced manually.

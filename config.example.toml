@@ -31,3 +31,4 @@ ports = []
 [ui]
 start_in_tray = true
 start_monitoring_on_launch = true
+auto_check_updates = true

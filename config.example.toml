@@ -1,0 +1,33 @@
+[prowl]
+api_key = ""
+application = "Windows Prowl Agent"
+
+[general]
+poll_interval_seconds = 30
+cooldown_seconds = 600
+
+device = ""
+
+[events]
+battery_low = true
+battery_threshold_percent = 20
+cpu_high = true
+cpu_threshold_percent = 90
+memory_high = true
+memory_threshold_percent = 90
+disk_low = true
+disk_threshold_percent = 10
+
+[features]
+power_change = true
+network_change = true
+
+[ports]
+monitor = false
+poll_interval_seconds = 15
+cooldown_seconds = 60
+ports = []
+
+[ui]
+start_in_tray = true
+start_monitoring_on_launch = true

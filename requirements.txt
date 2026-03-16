@@ -1,0 +1,5 @@
+requests>=2.31
+psutil>=5.9
+wxPython>=4.2
+# For Python < 3.11
+Tomli>=2.0; python_version < "3.11"

@@ -35,7 +35,7 @@ python main.py
 
 ## Notes
 
-- The wizard includes a ìSend Test Notificationî button.
+- The wizard includes a ‚ÄúSend Test Notification‚Äù button.
 - The app can start monitoring immediately after the wizard finishes.
 - The app hides to the system tray; use the tray icon to open Settings or Exit.
 - Port monitoring can be noisy; you can limit to specific ports.
@@ -46,3 +46,11 @@ python main.py
 ```bash
 pyinstaller --onefile --noconsole --name ProwlNotifier main.py
 ```
+
+## Libraries & Docs
+
+- [wxPython](https://wxpython.org/Phoenix/docs/html/)
+- [PyInstaller](https://pyinstaller.org/en/stable/)
+- [psutil](https://psutil.readthedocs.io/)
+- [Requests](https://requests.readthedocs.io/)
+- [Prowl API](https://www.prowlapp.com/api.php)

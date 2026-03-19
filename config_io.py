@@ -207,7 +207,7 @@ def save_settings(settings: AppSettings) -> None:
     lines.append("[files]")
     lines.append(f"enabled = {str(settings.file_watch_enabled).lower()}")
     lines.append(f"poll_interval_seconds = {settings.file_watch_poll_interval_seconds}")
-    file_paths = ", ".join([f\"\\\"{p}\\\"\" for p in settings.file_watch_paths])
+    file_paths = ", ".join([f"\"{p}\"" for p in settings.file_watch_paths])
     lines.append(f"paths = [{file_paths}]")
     lines.append("")
 

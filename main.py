@@ -26,8 +26,8 @@ def _show_crash_dialog(path: str) -> None:
     try:
         app = wx.App(False)
         wx.MessageBox(
-            f\"The app crashed. A log was saved to:\\n{path}\\n\\nPlease send this log for debugging.\",
-            \"Prowl Notifier Error\",
+            f"The app crashed. A log was saved to:\n{path}\n\nPlease send this log for debugging.",
+            "Prowl Notifier Error",
         )
         app.MainLoop()
     except Exception:

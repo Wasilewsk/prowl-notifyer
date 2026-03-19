@@ -1,3 +1,9 @@
+import sys
+
+import config_io as _config_io
+
+sys.modules["config-io"] = _config_io
+
 from config_io import config_exists
 from gui import run_app, run_wizard
 

@@ -45,7 +45,7 @@ python main.py
 ## Build (after you confirm it works)
 
 ```bash
-pyinstaller --onefile --noconsole --name ProwlNotifier main.py
+pyinstaller ProwlNotifier.spec
 ```
 
 ## Libraries & Docs

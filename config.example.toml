@@ -28,6 +28,11 @@ poll_interval_seconds = 15
 cooldown_seconds = 60
 ports = []
 
+[files]
+enabled = false
+poll_interval_seconds = 30
+paths = []
+
 [ui]
 start_in_tray = true
 start_monitoring_on_launch = true

@@ -56,12 +56,14 @@ class SettingsDialog(wx.Dialog):
         self.page_events = self._build_events_page(notebook)
         self.page_features = self._build_features_page(notebook)
         self.page_ports = self._build_ports_page(notebook)
+        self.page_files = self._build_files_page(notebook)
         self.page_ui = self._build_ui_page(notebook)
 
         notebook.AddPage(self.page_prowl, "Prowl")
         notebook.AddPage(self.page_events, "Events")
         notebook.AddPage(self.page_features, "Features")
         notebook.AddPage(self.page_ports, "Ports")
+        notebook.AddPage(self.page_files, "Files")
         notebook.AddPage(self.page_ui, "UI")
 
         sizer.Add(notebook, 1, wx.ALL | wx.EXPAND, 10)
@@ -206,6 +208,33 @@ class SettingsDialog(wx.Dialog):
         panel.SetSizer(sizer)
         return panel
 
+    def _build_files_page(self, parent: wx.Window) -> wx.Panel:
+        panel = wx.Panel(parent)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.files_enable_check = wx.CheckBox(panel, label="&Notify on file create/modify/delete")
+        self.files_enable_check.SetValue(self.settings.file_watch_enabled)
+        sizer.Add(self.files_enable_check, 0, wx.ALL, 10)
+
+        path_label = wx.StaticText(panel, label="Folders to watch (one per line)")
+        self.files_paths_ctrl = wx.TextCtrl(panel, style=wx.TE_MULTILINE)
+        if self.settings.file_watch_paths:
+            self.files_paths_ctrl.SetValue("\n".join(self.settings.file_watch_paths))
+        sizer.Add(path_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+        sizer.Add(self.files_paths_ctrl, 1, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10)
+
+        poll_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        poll_label = wx.StaticText(panel, label="Polling interval (seconds)")
+        self.files_poll_ctrl = wx.SpinCtrl(
+            panel, min=5, max=3600, initial=self.settings.file_watch_poll_interval_seconds
+        )
+        poll_sizer.Add(poll_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
+        poll_sizer.Add(self.files_poll_ctrl, 0)
+        sizer.Add(poll_sizer, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        panel.SetSizer(sizer)
+        return panel
+
     def _build_ui_page(self, parent: wx.Window) -> wx.Panel:
         panel = wx.Panel(parent)
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -270,6 +299,9 @@ class SettingsDialog(wx.Dialog):
             ports_list=ports_list,
             ports_poll_interval_seconds=int(self.ports_poll_ctrl.GetValue()),
             ports_cooldown_seconds=int(self.ports_cooldown_ctrl.GetValue()),
+            file_watch_enabled=self.files_enable_check.GetValue(),
+            file_watch_paths=[p.strip() for p in self.files_paths_ctrl.GetValue().splitlines() if p.strip()],
+            file_watch_poll_interval_seconds=int(self.files_poll_ctrl.GetValue()),
             start_in_tray=self.start_in_tray_check.GetValue(),
             start_monitoring_on_launch=self.start_monitoring_check.GetValue(),
             auto_check_updates=self.auto_update_check.GetValue(),
@@ -368,7 +400,7 @@ class MainFrame(wx.Frame):
             self.update_status()
 
         if self.settings.start_in_tray:
-            self.Hide()
+            self.Show(False)
 
         if self.settings.auto_check_updates:
             threading.Thread(target=self.check_for_updates, daemon=True).start()
@@ -677,7 +709,8 @@ def run_app() -> None:
     app = wx.App(False)
     settings = load_settings()
     frame = MainFrame(settings)
-    frame.Show()
+    if not settings.start_in_tray:
+        frame.Show()
     app.MainLoop()
 
 

@@ -40,6 +40,7 @@ class MonitorService:
         monitors = SystemMonitors(monitor_config, state)
 
         last_port_check = 0.0
+        last_file_check = 0.0
 
         while not self._stop.is_set():
             try:
@@ -80,6 +81,13 @@ class MonitorService:
                         ports_filter = self.settings.ports_list or None
                         for msg in monitors.check_port_changes(ports_filter):
                             client.send("Port Change", msg)
+
+                if self.settings.file_watch_enabled and self.settings.file_watch_paths:
+                    now = time.time()
+                    if (now - last_file_check) >= self.settings.file_watch_poll_interval_seconds:
+                        last_file_check = now
+                        for msg in monitors.check_file_changes(self.settings.file_watch_paths):
+                            client.send("File Change", msg)
 
                 state.save()
             except Exception as exc:

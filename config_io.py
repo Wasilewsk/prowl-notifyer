@@ -36,6 +36,9 @@ class AppSettings:
     ports_list: List[int]
     ports_poll_interval_seconds: int
     ports_cooldown_seconds: int
+    file_watch_enabled: bool
+    file_watch_paths: List[str]
+    file_watch_poll_interval_seconds: int
     start_in_tray: bool
     start_monitoring_on_launch: bool
     auto_check_updates: bool
@@ -61,6 +64,9 @@ DEFAULTS = AppSettings(
     ports_list=[],
     ports_poll_interval_seconds=15,
     ports_cooldown_seconds=60,
+    file_watch_enabled=False,
+    file_watch_paths=[],
+    file_watch_poll_interval_seconds=30,
     start_in_tray=True,
     start_monitoring_on_launch=True,
     auto_check_updates=True,
@@ -116,6 +122,7 @@ def load_settings() -> AppSettings:
     events = data.get("events", {})
     features = data.get("features", {})
     ports = data.get("ports", {})
+    files = data.get("files", {})
     ui = data.get("ui", {})
 
     return AppSettings(
@@ -144,6 +151,11 @@ def load_settings() -> AppSettings:
             ports.get("poll_interval_seconds", DEFAULTS.ports_poll_interval_seconds)
         ),
         ports_cooldown_seconds=int(ports.get("cooldown_seconds", DEFAULTS.ports_cooldown_seconds)),
+        file_watch_enabled=bool(files.get("enabled", DEFAULTS.file_watch_enabled)),
+        file_watch_paths=list(files.get("paths", DEFAULTS.file_watch_paths)),
+        file_watch_poll_interval_seconds=int(
+            files.get("poll_interval_seconds", DEFAULTS.file_watch_poll_interval_seconds)
+        ),
         start_in_tray=bool(ui.get("start_in_tray", DEFAULTS.start_in_tray)),
         start_monitoring_on_launch=bool(
             ui.get("start_monitoring_on_launch", DEFAULTS.start_monitoring_on_launch)
@@ -190,6 +202,13 @@ def save_settings(settings: AppSettings) -> None:
     lines.append(f"cooldown_seconds = {settings.ports_cooldown_seconds}")
     ports_list = ", ".join([str(p) for p in settings.ports_list])
     lines.append(f"ports = [{ports_list}]")
+    lines.append("")
+
+    lines.append("[files]")
+    lines.append(f"enabled = {str(settings.file_watch_enabled).lower()}")
+    lines.append(f"poll_interval_seconds = {settings.file_watch_poll_interval_seconds}")
+    file_paths = ", ".join([f\"\\\"{p}\\\"\" for p in settings.file_watch_paths])
+    lines.append(f"paths = [{file_paths}]")
     lines.append("")
 
     lines.append("[ui]")

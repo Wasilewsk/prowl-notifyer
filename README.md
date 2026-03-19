@@ -8,6 +8,7 @@ A screen-reader friendly wxPython onboarding/configuration wizard for sending Pr
 - Power adapter plug/unplug alerts
 - Network connectivity change alerts
 - Port open/close alerts (optional)
+- File create/modify/delete alerts (optional)
 - Accessible wizard-based setup
 - Settings panel for changing configuration
 - Hides to system tray

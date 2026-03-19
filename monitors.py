@@ -217,3 +217,47 @@ class SystemMonitors:
             messages.append(f"Ports closed: {ports_text}.")
 
         return messages
+
+    def check_file_changes(self, paths: List[str]) -> List[str]:
+        snapshot: Dict[str, Tuple[float, int]] = {}
+        for root in paths:
+            if not root:
+                continue
+            if not os.path.exists(root):
+                continue
+            for dirpath, _dirnames, filenames in os.walk(root):
+                for name in filenames:
+                    full_path = os.path.join(dirpath, name)
+                    try:
+                        stat = os.stat(full_path)
+                    except OSError:
+                        continue
+                    snapshot[full_path] = (stat.st_mtime, stat.st_size)
+
+        prev = self.state.get_value("file_snapshot", {})
+        if not isinstance(prev, dict):
+            prev = {}
+
+        created = [p for p in snapshot.keys() if p not in prev]
+        deleted = [p for p in prev.keys() if p not in snapshot]
+        modified = [p for p, meta in snapshot.items() if p in prev and tuple(prev[p]) != meta]
+
+        self.state.set_value("file_snapshot", snapshot)
+
+        messages: List[str] = []
+        for path in created:
+            messages.append(f"File created: {path}")
+        for path in modified:
+            messages.append(f"File modified: {path}")
+        for path in deleted:
+            messages.append(f"File deleted: {path}")
+
+        if len(messages) > 10:
+            created_count = len(created)
+            modified_count = len(modified)
+            deleted_count = len(deleted)
+            return [
+                f"File changes detected. Created: {created_count}, Modified: {modified_count}, Deleted: {deleted_count}."
+            ]
+
+        return messages

@@ -5,7 +5,7 @@ import os
 
 a = Analysis(
     ['main.py'],
-    pathex=[os.path.abspath(os.path.dirname(__file__))],
+    pathex=[os.path.abspath(os.getcwd())],
     binaries=[],
     datas=[],
     hiddenimports=['config_io', 'configio'],
